@@ -8,8 +8,9 @@ async function main(): Promise<void> {
   const server = createServer(config);
   const transport = new StdioServerTransport();
   await server.connect(transport);
+  const siteList = config.sites.map((s) => `${s.name} → ${s.baseUrl}`).join(", ");
   console.error(
-    `connectedone-mcp v${VERSION} を起動しました（接続先: ${config.baseUrl}${config.readonly ? " / 読み取り専用モード" : ""}）`,
+    `connectedone-mcp v${VERSION} を起動しました（${config.sites.length}サイト: ${siteList}${config.readonly ? " / 読み取り専用モード" : ""}）`,
   );
 }
 

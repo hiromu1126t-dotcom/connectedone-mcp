@@ -1,4 +1,5 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
+import { z } from "zod";
 import { VERSION } from "./config.js";
 import type { Config } from "./config.js";
 import { ApiClient } from "./http.js";
@@ -28,21 +29,50 @@ export function allTools(): ToolDef[] {
 }
 
 export function createServer(config: Config): McpServer {
-  const api = new ApiClient(config);
+  const clients = new Map<string, ApiClient>();
+  for (const site of config.sites) clients.set(site.name, new ApiClient(site));
+
+  const siteNames = config.sites.map((s) => s.name);
+  const multiSite = config.sites.length > 1;
+  const defaultClient = clients.get(siteNames[0])!;
+
   const server = new McpServer({ name: "connectedone", version: VERSION });
 
   for (const tool of allTools()) {
     if (config.readonly && !tool.annotations.readOnlyHint) continue;
+
+    const inputSchema = multiSite
+      ? {
+          site: z
+            .enum(siteNames as [string, ...string[]])
+            .describe(`操作対象のサイト名（${siteNames.join(" / ")}）`),
+          ...tool.inputSchema,
+        }
+      : tool.inputSchema;
+
     server.registerTool(
       tool.name,
       {
         description: tool.description,
-        inputSchema: tool.inputSchema,
+        inputSchema,
         annotations: tool.annotations,
       },
       async (args: Record<string, unknown>) => {
         try {
-          const data = await tool.handler(args ?? {}, api);
+          const { site, ...rest } = (args ?? {}) as Record<string, any>;
+          const client = multiSite ? clients.get(String(site)) : defaultClient;
+          if (!client) {
+            return {
+              content: [
+                {
+                  type: "text" as const,
+                  text: `サイト「${site}」は設定されていません。利用可能なサイト: ${siteNames.join(" / ")}`,
+                },
+              ],
+              isError: true,
+            };
+          }
+          const data = await tool.handler(rest, client);
           return {
             content: [{ type: "text" as const, text: JSON.stringify(data, null, 2) }],
           };

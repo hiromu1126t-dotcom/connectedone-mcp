@@ -90,6 +90,10 @@ claude mcp add connectedone \
 
 ## 複数サイトを管理している場合
 
+2つの方法があります。**2〜3サイトなら方法A（シンプル）、サイトが多いなら方法B（1つにまとめる）**がおすすめです。
+
+### 方法A: サイトごとに登録する
+
 サイトごとに名前を変えて複数登録できます。Claude には「cfbooks の注文を見せて」のようにサーバー名で区別して話しかけられます。
 
 ```json
@@ -117,12 +121,43 @@ claude mcp add connectedone \
 
 APIキーはサイトごとに別物です。それぞれのサイトの管理画面（Website Settings → Applications → API Key）から取得してください。
 
+### 方法B: 1つのサーバーに複数サイトをまとめる
+
+環境変数に番号を付けて登録すると、1つのサーバーで全サイトを扱えます。全ツールに `site` パラメータが追加され、「**cfbooks の注文を一覧して**」のようにサイト名で指定して操作します（どのサイトへの操作か必ず指定する仕組みなので、誤って別サイトを書き換える事故が起きません）。
+
+```json
+{
+  "mcpServers": {
+    "connectedone": {
+      "command": "npx",
+      "args": ["-y", "github:hiromu1126t-dotcom/connectedone-mcp"],
+      "env": {
+        "CONNECTEDONE_SITE_NAME_1": "cfbooks",
+        "CONNECTEDONE_SITE_URL_1": "https://cfbooksのサブドメイン.connected-one.world",
+        "CONNECTEDONE_API_KEY_1": "サイトAのAPIキー",
+        "CONNECTEDONE_SITE_NAME_2": "honten",
+        "CONNECTEDONE_SITE_URL_2": "https://hontenのサブドメイン.connected-one.world",
+        "CONNECTEDONE_API_KEY_2": "サイトBのAPIキー"
+      }
+    }
+  }
+}
+```
+
+- 番号は `_1` `_2` `_3` … と続けられます（サイト数の上限なし）
+- `CONNECTEDONE_SITE_NAME_◯` は省略可。省略するとサブドメイン名（例: `autosalesacademy`）がサイト名になります
+- サイトが1つだけの場合は従来どおり `CONNECTEDONE_SITE_URL` ＋ `CONNECTEDONE_API_KEY` でOK（`site` パラメータは追加されません）
+
 ## 環境変数
 
 | 変数 | 必須 | 説明 |
 |---|---|---|
 | `CONNECTEDONE_SITE_URL` | ✅ | コネワン発行のサブドメイン推奨（`https://◯◯.connected-one.world`）。独自ドメインも可。`www.` は付けない |
 | `CONNECTEDONE_API_KEY` | ✅ | ①で取得したAPIキー |
+| `CONNECTEDONE_SITE_NAME` | — | サイトの呼び名（省略時はサブドメイン名） |
+| `CONNECTEDONE_SITE_URL_1` `_2` … | — | 複数サイトをまとめる場合のサイトURL（方法B） |
+| `CONNECTEDONE_API_KEY_1` `_2` … | — | 複数サイトをまとめる場合のAPIキー（方法B） |
+| `CONNECTEDONE_SITE_NAME_1` `_2` … | — | 複数サイトをまとめる場合の呼び名（省略時はサブドメイン名） |
 | `CONNECTEDONE_READONLY` | — | `true` にすると閲覧系ツールのみ有効になり、作成・更新・削除は一切できなくなります |
 
 ## 読み取り専用モード

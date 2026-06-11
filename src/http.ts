@@ -1,5 +1,5 @@
 import { VERSION } from "./config.js";
-import type { Config } from "./config.js";
+import type { SiteConfig } from "./config.js";
 
 export type Query = Record<string, string | number | boolean | undefined>;
 
@@ -15,7 +15,7 @@ export function pathId(id: string | number): string {
 }
 
 export class ApiClient {
-  constructor(private readonly config: Config) {}
+  constructor(private readonly config: SiteConfig) {}
 
   async request(method: string, path: string, options: RequestOptions = {}): Promise<unknown> {
     const url = new URL(this.config.baseUrl + path);
