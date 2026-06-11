@@ -36,10 +36,29 @@ export class ApiClient {
         headers,
         body: options.body !== undefined ? JSON.stringify(options.body) : undefined,
         signal: AbortSignal.timeout(30_000),
+        redirect: "manual",
       });
     } catch {
       throw new ApiError(
         `サイトに接続できませんでした。CONNECTEDONE_SITE_URL の値（現在: ${url.origin}）が正しいか、ネットワーク接続を確認してください。`,
+      );
+    }
+
+    if (response.status >= 300 && response.status < 400) {
+      const location = response.headers.get("location");
+      let recommended = "";
+      if (location) {
+        try {
+          recommended = new URL(location, url).origin.replace(/^http:\/\//i, "https://");
+        } catch {
+          recommended = "";
+        }
+      }
+      const hint = recommended
+        ? `CONNECTEDONE_SITE_URL を「${recommended}」に変更してください。`
+        : "CONNECTEDONE_SITE_URL に、ブラウザでサイトを開いた時に表示される正式なドメインを設定してください。";
+      throw new ApiError(
+        `接続先がリダイレクトされました。設定されたドメイン（${url.origin}）はサイトの正式なドメインではないようです。${hint}よくある原因は「www.」の付けすぎ・付け忘れです。`,
       );
     }
 

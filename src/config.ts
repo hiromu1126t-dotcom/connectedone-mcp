@@ -17,7 +17,7 @@ const SETUP_EXAMPLE = {
       command: "npx",
       args: ["-y", "github:hiromu1126t-dotcom/connectedone-mcp"],
       env: {
-        CONNECTEDONE_SITE_URL: "https://あなたのサイトのドメイン",
+        CONNECTEDONE_SITE_URL: "https://あなたのサブドメイン.connected-one.world",
         CONNECTEDONE_API_KEY: "取得したAPIキー",
       },
     },
