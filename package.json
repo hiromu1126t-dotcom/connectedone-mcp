@@ -30,7 +30,6 @@
     "mcp",
     "model-context-protocol",
     "connectedone",
-    "simvoly",
     "claude"
   ],
   "dependencies": {
